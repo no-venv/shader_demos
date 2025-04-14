@@ -1,0 +1,115 @@
+[gd_scene load_steps=8 format=3 uid="uid://cvcrmosc38imj"]
+
+[ext_resource type="Texture2D" uid="uid://camept8rutlfu" path="res://wp11242657-call-of-the-night-wallpapers.jpg" id="1_0fbet"]
+[ext_resource type="PackedScene" path="res://hsv_correction.tscn" id="2_62e2m"]
+[ext_resource type="Texture2D" uid="uid://bfxogs8gqkdl1" path="res://RGB.tres" id="3_qtu10"]
+
+[sub_resource type="GDScript" id="GDScript_62e2m"]
+script/source = "extends Label
+
+func _process(delta: float) -> void:
+	text = \"%s fps\" % round(1/delta)
+"
+
+[sub_resource type="Shader" id="Shader_mwxne"]
+code = "// @venv
+shader_type canvas_item;
+uniform sampler2D screen : hint_screen_texture; // Screen Texture
+uniform sampler2D color_swap_texture; // Colour Swap 1D Texture
+vec3 rgb2hsv(vec3 c)
+{
+	// https://gist.github.com/983/e170a24ae8eba2cd174f
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c)
+{
+	// https://gist.github.com/983/e170a24ae8eba2cd174f
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+void fragment() {
+	vec3 colour = texture(screen,SCREEN_UV).rgb;
+	vec3 hsv_colour = rgb2hsv(colour);
+	vec3 result_colour = texture(color_swap_texture,vec2(hsv_colour.r,0)).rgb;
+	result_colour = rgb2hsv(result_colour);
+	result_colour.gb = hsv_colour.gb;
+	result_colour = hsv2rgb(result_colour);
+	COLOR.rgb = result_colour;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qtu10"]
+shader = SubResource("Shader_mwxne")
+shader_parameter/color_swap_texture = ExtResource("3_qtu10")
+
+[sub_resource type="GDScript" id="GDScript_qtu10"]
+script/source = "extends OptionButton
+"
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_horizontal_guides_ = [172.0]
+
+[node name="ColorRect2" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(0, 0, 0, 1)
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_0fbet")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 68.0
+offset_bottom = 40.0
+text = "fps: <>"
+script = SubResource("GDScript_62e2m")
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="."]
+copy_mode = 2
+metadata/_edit_lock_ = true
+
+[node name="ColorRect" parent="." instance=ExtResource("2_62e2m")]
+material = SubResource("ShaderMaterial_qtu10")
+layout_mode = 0
+anchors_preset = 0
+
+[node name="OptionButton" type="OptionButton" parent="."]
+layout_mode = 0
+offset_left = 85.0
+offset_top = 19.0
+offset_right = 148.0
+offset_bottom = 39.0
+item_count = 3
+popup/item_0/text = "RGB"
+popup/item_0/id = 0
+popup/item_1/text = "Filter 1"
+popup/item_1/id = 1
+popup/item_2/text = "Filter 2"
+popup/item_2/id = 2
+script = SubResource("GDScript_qtu10")
