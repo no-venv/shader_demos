@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://camept8rutlfu" path="res://wp11242657-call-of-the-night-wallpapers.jpg" id="1_0fbet"]
 [ext_resource type="PackedScene" path="res://hsv_correction.tscn" id="2_62e2m"]
-[ext_resource type="Texture2D" uid="uid://bfxogs8gqkdl1" path="res://RGB.tres" id="3_qtu10"]
+[ext_resource type="Texture2D" uid="uid://bfxogs8gqkdl1" path="res://color/RGB.tres" id="3_qtu10"]
 
 [sub_resource type="GDScript" id="GDScript_62e2m"]
 script/source = "extends Label
@@ -53,6 +53,19 @@ shader_parameter/color_swap_texture = ExtResource("3_qtu10")
 
 [sub_resource type="GDScript" id="GDScript_qtu10"]
 script/source = "extends OptionButton
+var options = [
+	preload(\"res://color/RGB.tres\"),
+	preload(\"res://color/RedBlue.tres\"),
+	preload(\"res://color/PurpleYellow.tres\")
+]
+func _ready() -> void:
+	item_selected.connect(func(id):
+		var resource = options[id]
+		var color_rect : ColorRect = get_parent().get_node(\"ColorRect\")
+		var shader : ShaderMaterial = color_rect.material
+		shader.set_shader_parameter(\"color_swap_texture\",resource)
+		pass	
+	)
 "
 
 [node name="Control" type="Control"]
@@ -65,6 +78,7 @@ grow_vertical = 2
 metadata/_edit_horizontal_guides_ = [172.0]
 
 [node name="ColorRect2" type="ColorRect" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -96,8 +110,7 @@ metadata/_edit_lock_ = true
 
 [node name="ColorRect" parent="." instance=ExtResource("2_62e2m")]
 material = SubResource("ShaderMaterial_qtu10")
-layout_mode = 0
-anchors_preset = 0
+layout_mode = 1
 
 [node name="OptionButton" type="OptionButton" parent="."]
 layout_mode = 0
@@ -106,10 +119,10 @@ offset_top = 19.0
 offset_right = 148.0
 offset_bottom = 39.0
 item_count = 3
-popup/item_0/text = "RGB"
+popup/item_0/text = "Default"
 popup/item_0/id = 0
-popup/item_1/text = "Filter 1"
+popup/item_1/text = "Red-Cyan"
 popup/item_1/id = 1
-popup/item_2/text = "Filter 2"
+popup/item_2/text = "Purple-Yellow"
 popup/item_2/id = 2
 script = SubResource("GDScript_qtu10")
